@@ -1,8 +1,8 @@
 export interface CashTransaction {
   date: string;
-  amount: string;
+  amount: number;
   description?: string;
-  tradeId: string;
+  tradeId?: string;
 }
 
 export enum CashAccountActionTypes {
