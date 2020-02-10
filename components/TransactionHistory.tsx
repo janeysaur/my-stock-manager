@@ -1,9 +1,4 @@
-interface Transaction {
-  date: string;
-  amount: string;
-  description?: string;
-  tradeId: string;
-}
+import { CashTransaction } from "../store/cashAccount/types";
 
 interface Trade {
   id: string;
@@ -17,7 +12,7 @@ const TransactionLine = ({
   transaction,
   trade
 }: {
-  transaction: Transaction;
+  transaction: CashTransaction;
   trade?: Trade;
 }) => (
   <tr>
@@ -35,7 +30,7 @@ const TransactionHistory = ({
   transactions,
   trades
 }: {
-  transactions: Transaction[];
+  transactions: CashTransaction[];
   trades: Trade[];
 }) => (
   <table>
