@@ -12,8 +12,8 @@ import {
   InputAdornment,
   Input
 } from "@material-ui/core";
-import { ShareHolding } from "../store/types";
 import AwesomeDebouncePromise from "awesome-debounce-promise";
+import { ShareHolding } from "../store/types";
 import { fetchCurrentSharePrice, addTrade } from "../store/actions";
 
 const useStyles = makeStyles(theme => ({
@@ -44,49 +44,53 @@ const SellShares = ({
   const classes = useStyles();
 
   const [share, setShare] = React.useState("");
-  const [quantity, setQuantity] = React.useState("");
+  const [quantity, setQuantity] = React.useState(0);
   const [quantityError, setQuantityError] = React.useState("");
-  const [price, setPrice] = React.useState("");
+  const [price, setPrice] = React.useState(0);
+
   const [isValid, setIsValid] = React.useState(false);
 
   const fetchCurrentSharePrice = async symbol => {
     const currentPrice = await fetchCurrentSharePriceDebounced(symbol);
-    setPrice(
-      currentPrice
-        ? new Intl.NumberFormat("en-AU", {
-            style: "decimal",
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(currentPrice)
-        : ""
-    );
+    setPrice(currentPrice);
   };
 
   const handleShareChange = event => {
     const newValue = event.target.value;
     setShare(newValue);
-    setQuantity("");
-    setPrice("");
+    setQuantity(0);
+    setPrice(0);
     fetchCurrentSharePrice(newValue);
   };
 
   const handleQuantityChange = event => {
-    const newValue = event.target.value;
+    const newValue = parseInt(event.target.value);
     setQuantity(newValue);
+  };
 
+  React.useEffect(() => {
+    setIsValid(true);
     setQuantityError("");
-    if (share && newValue) {
+
+    if (share === "") {
+      setIsValid(false);
+    } else if (quantity <= 0) {
+      setIsValid(false);
+    } else {
       const holding = holdings.find(holding => holding.stock === share);
-      if (parseInt(newValue) > holding.quantity) {
+      if (quantity > holding.quantity) {
         setQuantityError(`You only hold ${holding.quantity} of this stock`);
         setIsValid(false);
       }
     }
-  };
+  }, [quantity]);
 
   const handleSubmit = () => {
-    if (share && quantity && price) {
-      sellShares(share, parseInt(quantity), parseFloat(price));
+    if (isValid) {
+      sellShares(share, quantity, price);
+      setShare("");
+      setQuantity(0);
+      setPrice(0);
     }
   };
 
@@ -111,8 +115,8 @@ const SellShares = ({
             type="number"
             label="Quantity"
             required
-            value={quantity}
-            error={!!quantityError}
+            value={quantity !== 0 ? quantity.toString() : ""}
+            error={share && price && (quantityError !== "" || quantity <= 0)}
             helperText={quantityError}
             onChange={handleQuantityChange}
           />
@@ -123,12 +127,20 @@ const SellShares = ({
           <InputLabel htmlFor="price">Current market price</InputLabel>
           <Input
             id="price"
-            value={price}
+            value={
+              price > 0
+                ? new Intl.NumberFormat("en-AU", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }).format(price)
+                : ""
+            }
             onChange={() => {}}
             startAdornment={<InputAdornment position="start">$</InputAdornment>}
             endAdornment={
               <InputAdornment position="end">
-                {share && price === "" && <CircularProgress />}
+                {share && price === 0 && <CircularProgress />}
               </InputAdornment>
             }
           />

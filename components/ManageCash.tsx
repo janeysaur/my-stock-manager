@@ -1,5 +1,4 @@
 import React from "react";
-import { CashTransaction } from "../store/types";
 import {
   Paper,
   Tabs,
@@ -10,8 +9,10 @@ import {
   InputAdornment,
   makeStyles,
   Button,
-  Grid
+  Grid,
+  FormHelperText
 } from "@material-ui/core";
+import { CashTransaction } from "../store/types";
 import { addCashTransaction } from "../store/actions";
 
 const useStyles = makeStyles(theme => ({
@@ -42,35 +43,44 @@ const ManageCash = ({
 }) => {
   const [action, setAction] = React.useState(TransactionType.DEPOSIT);
   const [amountError, setAmountError] = React.useState("");
-  const [amount, setAmount] = React.useState("");
+  const [amount, setAmount] = React.useState(0);
+  const [amountString, setAmountString] = React.useState("");
   const [isValid, setIsValid] = React.useState(false);
 
   const handleTabChange = (event, newIndex) => {
     setAction(tabs[newIndex]);
-    setAmount("");
+    setAmount(0);
+    setAmountString("");
   };
 
   const handleAmountChange = event => {
-    const newValue = event.target.value;
-    setAmount(newValue);
+    const newValue: string = event.target.value;
+    const newAmount: number = parseFloat(newValue);
+    setAmountString(newValue);
+    setAmount(newAmount);
+  };
 
-    if (action === TransactionType.WITHDRAW && parseFloat(newValue) > balance) {
-      setAmountError("Amount is greater than your current balance");
+  React.useEffect(() => {
+    setAmountError("");
+    setIsValid(true);
+
+    if (action === TransactionType.WITHDRAW && amount > balance) {
+      setAmountError("Insufficient funds");
       setIsValid(false);
     } else {
-      setAmountError("");
-      setIsValid(newValue !== "");
+      setIsValid(amount > 0);
     }
-  };
+  }, [amount, action]);
 
   const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
     const transaction: CashTransaction = {
       date: new Date().toISOString(),
-      amount: parseFloat(amount) * (action === TransactionType.DEPOSIT ? 1 : -1)
+      amount: (action === TransactionType.DEPOSIT ? 1 : -1) * amount
     };
 
     addTransaction(transaction);
-    setAmount("");
+    setAmountString("");
+    setAmount(0);
   };
 
   const classes = useStyles();
@@ -87,15 +97,16 @@ const ManageCash = ({
             <InputLabel htmlFor="amount">Amount</InputLabel>
             <Input
               id="amount"
-              value={amount}
+              value={amountString}
               type="number"
               onChange={handleAmountChange}
-              error={amountError !== ""}
+              error={amountError !== "" || amount < 0}
               startAdornment={
                 <InputAdornment position="start">$</InputAdornment>
               }
             />
           </FormControl>
+          <FormHelperText error>{amountError}</FormHelperText>
         </Grid>
         <Grid container justify="flex-end" className={classes.padding}>
           <Button

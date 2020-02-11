@@ -8,7 +8,8 @@ import {
   Button,
   CircularProgress,
   InputAdornment,
-  Input
+  Input,
+  FormHelperText
 } from "@material-ui/core";
 import AwesomeDebouncePromise from "awesome-debounce-promise";
 import { fetchCurrentSharePrice, addTrade } from "../store/actions";
@@ -31,43 +32,70 @@ const fetchCurrentSharePriceDebounced = AwesomeDebouncePromise(
   500
 );
 
-const BuyShares = ({ buyShares }: { buyShares: typeof addTrade }) => {
+const BuyShares = ({
+  balance,
+  buyShares
+}: {
+  balance: number;
+  buyShares: typeof addTrade;
+}) => {
   const classes = useStyles();
 
   const [share, setShare] = React.useState("");
-  const [quantity, setQuantity] = React.useState("");
-  const [price, setPrice] = React.useState("");
+  const [quantity, setQuantity] = React.useState(0);
+  const [price, setPrice] = React.useState(0);
+  const [errorMessage, setErrorMessage] = React.useState("");
   const [isValid, setIsValid] = React.useState(false);
 
   const fetchCurrentSharePrice = async symbol => {
     const currentPrice = await fetchCurrentSharePriceDebounced(symbol);
-    setPrice(
-      currentPrice
-        ? new Intl.NumberFormat("en-AU", {
-            style: "decimal",
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(currentPrice)
-        : ""
-    );
+    if (currentPrice) {
+      setPrice(currentPrice);
+    } else {
+      setPrice(0);
+    }
+  };
+
+  const resetForm = () => {
+    setShare("");
+    setQuantity(0);
+    setPrice(0);
   };
 
   const handleShareChange = event => {
     const newValue = event.target.value;
     setShare(newValue);
-    setQuantity("");
-    setPrice("");
     fetchCurrentSharePrice(newValue);
+    setQuantity(0);
+    setPrice(0);
   };
 
   const handleQuantityChange = event => {
-    const newValue = event.target.value;
+    const newValue = parseInt(event.target.value);
     setQuantity(newValue);
+    if (quantity < 0) {
+      setIsValid(false);
+    }
   };
 
+  React.useEffect(() => {
+    setIsValid(true);
+    setErrorMessage("");
+
+    if (price <= 0) {
+      setIsValid(false);
+    } else if (quantity <= 0) {
+      setIsValid(false);
+    } else if (price * quantity > balance) {
+      setIsValid(false);
+      setErrorMessage("Insufficient funds");
+    }
+  }, [share, price, quantity]);
+
   const handleSubmit = () => {
-    if (share && quantity && price) {
-      buyShares(share, parseInt(quantity), parseFloat(price));
+    if (isValid) {
+      buyShares(share, quantity, price);
+      resetForm();
     }
   };
 
@@ -75,9 +103,9 @@ const BuyShares = ({ buyShares }: { buyShares: typeof addTrade }) => {
     <Grid container className={classes.padding}>
       <Grid item xs={12} className={classes.padding}>
         <FormControl className={classes.formControl}>
-          <InputLabel id="share">Share</InputLabel>
           <TextField
             id="share"
+            type="text"
             label="Share"
             required
             value={share}
@@ -92,7 +120,7 @@ const BuyShares = ({ buyShares }: { buyShares: typeof addTrade }) => {
             type="number"
             label="Quantity"
             required
-            value={quantity}
+            value={quantity !== 0 ? quantity.toString() : ""}
             onChange={handleQuantityChange}
           />
         </FormControl>
@@ -102,16 +130,25 @@ const BuyShares = ({ buyShares }: { buyShares: typeof addTrade }) => {
           <InputLabel htmlFor="price">Current market price</InputLabel>
           <Input
             id="price"
-            value={price}
+            value={
+              price > 0
+                ? new Intl.NumberFormat("en-AU", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }).format(price)
+                : ""
+            }
             onChange={() => {}}
             startAdornment={<InputAdornment position="start">$</InputAdornment>}
             endAdornment={
               <InputAdornment position="end">
-                {share && price === "" && <CircularProgress />}
+                {share && price === 0 && <CircularProgress />}
               </InputAdornment>
             }
           />
         </FormControl>
+        <FormHelperText error>{errorMessage}</FormHelperText>
       </Grid>
 
       <Grid container justify="flex-end" className={classes.padding}>

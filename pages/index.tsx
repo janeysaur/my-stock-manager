@@ -115,6 +115,7 @@ const Home: NextPage<Props> = ({
                 Let's trade!
               </Typography>
               <ManageShares
+                balance={balance}
                 holdings={holdings}
                 buyShares={addTrade}
                 sellShares={(symbol, quantity, price) =>
