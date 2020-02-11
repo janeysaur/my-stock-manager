@@ -75,10 +75,15 @@ const Home: NextPage<Props> = ({
   const classes = useStyles();
 
   const [portfolioValue, setPortfolioValue] = React.useState();
+  const [loadingPortfolioValue, setLoadingPortfolioValue] = React.useState(
+    true
+  );
   React.useEffect(() => {
-    fetchCurrentHoldingsValue(holdings).then(totalValue =>
-      setPortfolioValue(totalValue)
-    );
+    setLoadingPortfolioValue(true);
+    fetchCurrentHoldingsValue(holdings).then(totalValue => {
+      setPortfolioValue(totalValue);
+      setLoadingPortfolioValue(false);
+    });
   }, [holdings]);
 
   return (
@@ -151,15 +156,15 @@ const Home: NextPage<Props> = ({
               </Typography>
               {holdings.length > 0 ? (
                 <div className={classes.center}>
-                  {portfolioValue !== undefined ? (
+                  {portfolioValue === undefined || loadingPortfolioValue ? (
+                    <CircularProgress />
+                  ) : (
                     <Typography className={classes.balance}>
                       {new Intl.NumberFormat("en-AU", {
                         style: "currency",
                         currency: "AUD"
                       }).format(portfolioValue)}
                     </Typography>
-                  ) : (
-                    <CircularProgress />
                   )}
                   <ShareHoldings holdings={holdings} />
                 </div>
