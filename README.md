@@ -27,3 +27,7 @@ npm run dev
 yarn
 yarn dev
 ```
+
+# Hosted Demo
+
+[Demo hosted using ZEIT Now](https://my-stock-manager.now.sh/)
