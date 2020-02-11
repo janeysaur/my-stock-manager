@@ -116,7 +116,11 @@ const SellShares = ({
             label="Quantity"
             required
             value={quantity !== 0 ? quantity.toString() : ""}
-            error={share && price && (quantityError !== "" || quantity <= 0)}
+            error={
+              share !== "" &&
+              price > 0 &&
+              (quantityError !== "" || quantity <= 0)
+            }
             helperText={quantityError}
             onChange={handleQuantityChange}
           />

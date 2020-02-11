@@ -90,7 +90,7 @@ const BuyShares = ({
       setIsValid(false);
       setErrorMessage("Insufficient funds");
     }
-  }, [share, price, quantity]);
+  }, [share, price, quantity, balance]);
 
   const handleSubmit = () => {
     if (isValid) {

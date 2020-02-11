@@ -42,6 +42,9 @@ const useStyles = makeStyles(theme => ({
     fontWeight: "bold",
     paddingBottom: ".5em"
   },
+  center: {
+    textAlign: "center"
+  },
   noResults: {
     textAlign: "center",
     padding: theme.spacing(2)
@@ -147,19 +150,19 @@ const Home: NextPage<Props> = ({
                 Share holdings
               </Typography>
               {holdings.length > 0 ? (
-                <>
-                  <Typography className={classes.balance}>
-                    {portfolioValue !== undefined ? (
-                      new Intl.NumberFormat("en-AU", {
+                <div className={classes.center}>
+                  {portfolioValue !== undefined ? (
+                    <Typography className={classes.balance}>
+                      {new Intl.NumberFormat("en-AU", {
                         style: "currency",
                         currency: "AUD"
-                      }).format(portfolioValue)
-                    ) : (
-                      <CircularProgress />
-                    )}
-                  </Typography>
+                      }).format(portfolioValue)}
+                    </Typography>
+                  ) : (
+                    <CircularProgress />
+                  )}
                   <ShareHoldings holdings={holdings} />
-                </>
+                </div>
               ) : (
                 <div className={classes.noResults}>
                   You don't have any holdings yet.
