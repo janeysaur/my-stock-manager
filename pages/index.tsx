@@ -11,9 +11,6 @@ import {
   Card
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import { TransactionHistory } from "../components/TransactionHistory";
-import { ManageCash } from "../components/ManageCash";
-import { TradeShares } from "../components/TradeShares";
 import {
   selectCashBalance,
   selectTransactionHistory,
@@ -21,7 +18,10 @@ import {
 } from "../store/selectors";
 import { Transaction, ShareHolding } from "../store/types";
 import { addCashTransaction, addTrade } from "../store/actions";
+import { ManageCash } from "../components/ManageCash";
+import { ManageShares } from "../components/ManageShares";
 import { ShareHoldings } from "../components/ShareHoldings";
+import { TransactionHistory } from "../components/TransactionHistory";
 
 const useStyles = makeStyles(theme => ({
   toolbar: {},
@@ -34,7 +34,8 @@ const useStyles = makeStyles(theme => ({
     height: "100%"
   },
   sectionHeading: {
-    fontWeight: "bold"
+    fontWeight: "bold",
+    paddingBottom: ".5em"
   },
   noResults: {
     textAlign: "center",
@@ -64,7 +65,6 @@ const Home: NextPage<Props> = ({
   addTrade
 }) => {
   const classes = useStyles();
-
   return (
     <>
       <CssBaseline />
@@ -114,7 +114,13 @@ const Home: NextPage<Props> = ({
               >
                 Let's trade!
               </Typography>
-              <TradeShares addTrade={addTrade} />
+              <ManageShares
+                holdings={holdings}
+                buyShares={addTrade}
+                sellShares={(symbol, quantity, price) =>
+                  addTrade(symbol, -1 * quantity, price)
+                }
+              />
             </Paper>
           </Grid>
           <Grid item xs={4}>

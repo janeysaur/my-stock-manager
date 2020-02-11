@@ -97,7 +97,7 @@ const ManageCash = ({
             />
           </FormControl>
         </Grid>
-        <Grid container xs={12} justify="flex-end" className={classes.padding}>
+        <Grid container justify="flex-end" className={classes.padding}>
           <Button
             variant="contained"
             color="primary"
