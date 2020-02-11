@@ -2,11 +2,11 @@ import React from "react";
 import AwesomeDebouncePromise from "awesome-debounce-promise";
 import { fetchCurrentSharePrice, addTrade } from "../store/actions";
 
-type BuySharesProps = {
+type Props = {
   addTrade: typeof addTrade;
 };
 
-type BuySharesState = {
+type State = {
   quantity: string;
   symbol: string;
   currentPrice?: number;
@@ -18,7 +18,7 @@ const fetchCurrentSharePriceDebounced = AwesomeDebouncePromise(
   500
 );
 
-class BuyShares extends React.Component<BuySharesProps, BuySharesState> {
+class TradeShares extends React.Component<Props, State> {
   state = {
     symbol: "",
     quantity: "",
@@ -42,11 +42,19 @@ class BuyShares extends React.Component<BuySharesProps, BuySharesState> {
     this.setState({ quantity: parseInt(e.target.value).toString() });
   };
 
-  onSubmit = () => {
+  buyStock = () => {
     const { addTrade } = this.props;
     const { symbol, quantity, currentPrice } = this.state;
     if (symbol && quantity && currentPrice) {
       addTrade(symbol, parseInt(quantity), currentPrice);
+    }
+  };
+
+  sellStock = () => {
+    const { addTrade } = this.props;
+    const { symbol, quantity, currentPrice } = this.state;
+    if (symbol && quantity && currentPrice) {
+      addTrade(symbol, -1 * parseInt(quantity), currentPrice);
     }
   };
 
@@ -80,12 +88,15 @@ class BuyShares extends React.Component<BuySharesProps, BuySharesState> {
             : "Invalid symbol"}
         </div>
         <br />
-        <button type="button" onClick={this.onSubmit}>
+        <button type="button" onClick={this.buyStock}>
           Buy
+        </button>
+        <button type="button" onClick={this.sellStock}>
+          Sell
         </button>
       </div>
     );
   }
 }
 
-export { BuyShares };
+export { TradeShares };

@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { DepositCash } from "../components/DepositCash";
-import { BuyShares } from "../components/BuyShares";
+import { TradeShares } from "../components/TradeShares";
 import {
   selectCashBalance,
   selectTransactionHistory,
@@ -40,7 +40,7 @@ const Home: NextPage<Props> = ({
         <TransactionHistory transactions={transactions} />
       </div>
       <div>
-        <BuyShares addTrade={addTrade} />
+        <TradeShares addTrade={addTrade} />
         <ShareHoldings holdings={holdings} />
       </div>
     </div>
