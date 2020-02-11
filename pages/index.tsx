@@ -1,3 +1,4 @@
+import React from "react";
 import { NextPage } from "next";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -8,16 +9,20 @@ import {
   Typography,
   Paper,
   Grid,
-  Card
+  makeStyles,
+  CircularProgress
 } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
 import {
   selectCashBalance,
   selectTransactionHistory,
   selectCurrentShareHoldings
 } from "../store/selectors";
 import { Transaction, ShareHolding } from "../store/types";
-import { addCashTransaction, addTrade } from "../store/actions";
+import {
+  addCashTransaction,
+  addTrade,
+  fetchCurrentHoldingsValue
+} from "../store/actions";
 import { ManageCash } from "../components/ManageCash";
 import { ManageShares } from "../components/ManageShares";
 import { ShareHoldings } from "../components/ShareHoldings";
@@ -65,6 +70,14 @@ const Home: NextPage<Props> = ({
   addTrade
 }) => {
   const classes = useStyles();
+
+  const [portfolioValue, setPortfolioValue] = React.useState();
+  React.useEffect(() => {
+    fetchCurrentHoldingsValue(holdings).then(totalValue =>
+      setPortfolioValue(totalValue)
+    );
+  }, [holdings]);
+
   return (
     <>
       <CssBaseline />
@@ -134,7 +147,19 @@ const Home: NextPage<Props> = ({
                 Share holdings
               </Typography>
               {holdings.length > 0 ? (
-                <ShareHoldings holdings={holdings} />
+                <>
+                  <Typography className={classes.balance}>
+                    {portfolioValue !== undefined ? (
+                      new Intl.NumberFormat("en-AU", {
+                        style: "currency",
+                        currency: "AUD"
+                      }).format(portfolioValue)
+                    ) : (
+                      <CircularProgress />
+                    )}
+                  </Typography>
+                  <ShareHoldings holdings={holdings} />
+                </>
               ) : (
                 <div className={classes.noResults}>
                   You don't have any holdings yet.
