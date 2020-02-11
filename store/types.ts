@@ -13,6 +13,10 @@ export interface ShareTransaction {
   quantity: number;
 }
 
+export interface Transaction extends CashTransaction {
+  trade?: ShareTransaction;
+}
+
 export interface ShareHolding {
   stock: string;
   quantity: number;

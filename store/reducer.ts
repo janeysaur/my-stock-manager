@@ -4,7 +4,13 @@ import { ApplicationState } from "./states";
 import { ActionTypes, CashTransaction, ShareTransaction } from "./types";
 
 export const initialState: ApplicationState = {
-  transactions: [],
+  transactions: [
+    {
+      date: new Date().toISOString(),
+      amount: 0,
+      description: "Opening balance"
+    }
+  ],
   trades: []
 };
 
@@ -32,7 +38,7 @@ const reducer: Reducer<ApplicationState> = (state = initialState, action) => {
 
       const transaction: CashTransaction = {
         date: now,
-        amount: quantity * price,
+        amount: -1 * (quantity * price),
         description: "TRADE",
         tradeId
       };

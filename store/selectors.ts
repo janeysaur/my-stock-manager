@@ -1,5 +1,10 @@
 import { createSelector } from "reselect";
-import { CashTransaction, ShareTransaction, ShareHolding } from "./types";
+import {
+  CashTransaction,
+  ShareTransaction,
+  ShareHolding,
+  Transaction
+} from "./types";
 import { ApplicationState } from "./states";
 
 export const selectCashTransactions = (
@@ -19,31 +24,24 @@ export const selectShareTransactions = (
   state: ApplicationState
 ): ShareTransaction[] => state.trades || [];
 
-const shareTransactionToString = (
-  shareTransaction: ShareTransaction
-): string => {
-  const { quantity, share, price } = shareTransaction;
-  const tradeType = quantity > 0 ? "BUY" : "SELL";
-  return `${tradeType}: ${quantity} x ${share} @ $${price}`;
-};
-
 export const selectTransactionHistory = createSelector(
   selectCashTransactions,
   selectShareTransactions,
-  (transactions, trades): CashTransaction[] =>
-    transactions.map(transaction => {
-      const trade = transaction.tradeId
-        ? trades.find(trade => trade.tradeId === transaction.tradeId)
-        : undefined;
+  (transactions, trades): Transaction[] =>
+    transactions
+      .map(transaction => {
+        const trade = transaction.tradeId
+          ? trades.find(trade => trade.tradeId === transaction.tradeId)
+          : undefined;
 
-      return {
-        ...transaction,
-        description: trade
-          ? shareTransactionToString(trade)
-          : transaction.description
-      };
-    })
+        return {
+          ...transaction,
+          trade
+        };
+      })
+      .reverse()
 );
+
 export const selectCurrentShareHoldings = createSelector(
   selectShareTransactions,
   (trades): ShareHolding[] => {

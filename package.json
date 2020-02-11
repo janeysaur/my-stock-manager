@@ -12,6 +12,7 @@
   "author": "janeysaur",
   "license": "ISC",
   "dependencies": {
+    "@material-ui/core": "^4.9.2",
     "awesome-debounce-promise": "^2.1.0",
     "babel-polyfill": "^6.26.0",
     "cross-fetch": "^3.0.4",

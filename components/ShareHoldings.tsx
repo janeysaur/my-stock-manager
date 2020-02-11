@@ -1,22 +1,34 @@
 import { ShareHolding } from "../store/types";
+import {
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody
+} from "@material-ui/core";
 
 const ShareHoldings = ({ holdings }: { holdings: ShareHolding[] }) => (
-  <table>
-    <thead>
-      <tr>
-        <th>Stock</th>
-        <th>Quantity</th>
-      </tr>
-    </thead>
-    <tbody>
-      {holdings.map(({ quantity, stock }) => (
-        <tr key={stock}>
-          <td>{stock}</td>
-          <td>{quantity}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+  <TableContainer>
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell variant="head">Stock</TableCell>
+          <TableCell variant="head" align="right">
+            Quantity
+          </TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {holdings.map(({ quantity, stock }) => (
+          <TableRow key={stock}>
+            <TableCell>{stock}</TableCell>
+            <TableCell align="right">{quantity}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
 );
 
 export { ShareHoldings };
