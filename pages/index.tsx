@@ -3,24 +3,31 @@ import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { DepositCash } from "../components/DepositCash";
+import { BuyShares } from "../components/BuyShares";
 import {
-  selectCashTransactions,
-  selectCashBalance
-} from "../store/cashAccount/selectors";
-import { CashTransaction } from "../store/cashAccount/types";
-import { addCashTransaction } from "../store/cashAccount/actions";
+  selectCashBalance,
+  selectTransactionHistory,
+  selectCurrentShareHoldings
+} from "../store/selectors";
+import { CashTransaction, ShareHolding } from "../store/types";
+import { addCashTransaction, addTrade } from "../store/actions";
 import { WithdrawCash } from "../components/WithdrawCash";
+import { ShareHoldings } from "../components/ShareHoldings";
 
 type Props = {
   balance: number;
   transactions: CashTransaction[];
-  addCashTransaction: (transaction: CashTransaction) => void;
+  holdings: ShareHolding[];
+  addCashTransaction: typeof addCashTransaction;
+  addTrade: typeof addTrade;
 };
 
 const Home: NextPage<Props> = ({
   balance,
   transactions,
-  addCashTransaction
+  holdings,
+  addCashTransaction,
+  addTrade
 }) => (
   <>
     <h1>My stock manager</h1>
@@ -30,7 +37,11 @@ const Home: NextPage<Props> = ({
       <div>
         <DepositCash addTransaction={addCashTransaction} />
         <WithdrawCash addTransaction={addCashTransaction} />
-        <TransactionHistory transactions={transactions} trades={[]} />
+        <TransactionHistory transactions={transactions} />
+      </div>
+      <div>
+        <BuyShares addTrade={addTrade} />
+        <ShareHoldings holdings={holdings} />
       </div>
     </div>
   </>
@@ -38,13 +49,15 @@ const Home: NextPage<Props> = ({
 
 const mapStateToProps = state => ({
   balance: selectCashBalance(state),
-  transactions: selectCashTransactions(state)
+  transactions: selectTransactionHistory(state),
+  holdings: selectCurrentShareHoldings(state)
 });
 
 const mapDispatchToProps = dispatch => {
   return bindActionCreators(
     {
-      addCashTransaction
+      addCashTransaction,
+      addTrade
     },
     dispatch
   );

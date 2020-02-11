@@ -1,10 +1,6 @@
-import { CashAccountState } from "./cashAccount/types";
-import { initialState as cashAccountInitialState } from "./cashAccount/reducer";
+import { CashTransaction, ShareTransaction } from "./types";
 
 export interface ApplicationState {
-  cashAccount: Readonly<CashAccountState>;
+  transactions: CashTransaction[];
+  trades: ShareTransaction[];
 }
-
-export const initialState: ApplicationState = {
-  cashAccount: cashAccountInitialState
-};

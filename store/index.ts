@@ -1,8 +1,5 @@
-import { combineReducers } from "redux";
-import { cashAccount } from "./cashAccount/reducer";
+import { AppReducer } from "./reducer";
 
-const rootReducer = combineReducers({
-  cashAccount
-});
+const rootReducer = AppReducer;
 
 export default rootReducer;

@@ -1,9 +1,6 @@
-interface Holding {
-  stock: string;
-  quantity: number;
-}
+import { ShareHolding } from "../store/types";
 
-const ShareHoldings = ({ holdings }: { holdings: Holding[] }) => (
+const ShareHoldings = ({ holdings }: { holdings: ShareHolding[] }) => (
   <table>
     <thead>
       <tr>
@@ -12,7 +9,7 @@ const ShareHoldings = ({ holdings }: { holdings: Holding[] }) => (
       </tr>
     </thead>
     <tbody>
-      {holdings.map(({ stock, quantity }) => (
+      {holdings.map(({ quantity, stock }) => (
         <tr key={stock}>
           <td>{stock}</td>
           <td>{quantity}</td>

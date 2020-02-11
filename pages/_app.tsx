@@ -1,3 +1,4 @@
+import "babel-polyfill";
 import App from "next/app";
 import React from "react";
 import withReduxStore from "../lib/with-redux-store";

@@ -1,5 +1,5 @@
 import React from "react";
-import { CashTransaction } from "../store/cashAccount/types";
+import { CashTransaction } from "../store/types";
 
 type DepositCashProps = {
   addTransaction: (transaction: CashTransaction) => void;
