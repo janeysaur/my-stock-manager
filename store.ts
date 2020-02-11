@@ -3,14 +3,14 @@ import { composeWithDevTools } from "redux-devtools-extension";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import thunkMiddleware from "redux-thunk";
-import rootReducer from "./store/index";
+import { AppReducer } from "./store/reducer";
 
 const persistConfig = {
   key: "my-stock-manager",
   storage
 };
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const persistedReducer = persistReducer(persistConfig, AppReducer);
 
 export function initializeStore() {
   const store = createStore(
