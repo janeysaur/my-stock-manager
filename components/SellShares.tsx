@@ -1,4 +1,5 @@
 import React from "react";
+import { useFormState } from "react-use-form-state";
 import {
   makeStyles,
   FormControl,
@@ -43,63 +44,61 @@ const SellShares = ({
 }) => {
   const classes = useStyles();
 
-  const [share, setShare] = React.useState("");
-  const [quantity, setQuantity] = React.useState(0);
-  const [quantityError, setQuantityError] = React.useState("");
-  const [price, setPrice] = React.useState(0);
+  const [formState, input] = useFormState();
 
-  const [isValid, setIsValid] = React.useState(false);
-
+  const [fetchingSharePrice, setFetchingSharePrice] = React.useState();
   const fetchCurrentSharePrice = async symbol => {
+    setFetchingSharePrice(true);
+    formState.clearField("price");
     const currentPrice = await fetchCurrentSharePriceDebounced(symbol);
-    setPrice(currentPrice);
+    if (currentPrice) {
+      formState.setField("price", currentPrice);
+    }
+    setFetchingSharePrice(false);
   };
 
   const handleShareChange = event => {
     const newValue = event.target.value;
-    setShare(newValue);
-    setQuantity(0);
-    setPrice(0);
     fetchCurrentSharePrice(newValue);
+    formState.setField("share", newValue);
+    formState.clearField("quantity");
   };
 
-  const handleQuantityChange = event => {
-    const newValue = parseInt(event.target.value);
-    setQuantity(newValue);
-  };
-
-  React.useEffect(() => {
-    setIsValid(true);
-    setQuantityError("");
-
-    if (share === "") {
-      setIsValid(false);
-    } else if (quantity <= 0) {
-      setIsValid(false);
-    } else {
+  const validateQuantity = (value, values) => {
+    const intValue = parseInt(value);
+    const { share } = values;
+    if (share) {
       const holding = holdings.find(holding => holding.stock === share);
-      if (quantity > holding.quantity) {
-        setQuantityError(`You only hold ${holding.quantity} of this stock`);
-        setIsValid(false);
+      if (intValue > holding.quantity) {
+        return `You only hold ${holding.quantity} of this stock`;
       }
     }
-  }, [quantity]);
+    return isNaN(intValue) === false;
+  };
 
   const handleSubmit = () => {
-    if (isValid) {
-      sellShares(share, quantity, price);
-      setShare("");
-      setQuantity(0);
-      setPrice(0);
-    }
+    const { share, quantity, price } = formState.values;
+    sellShares(share, parseInt(quantity), parseFloat(price));
+    formState.reset();
   };
+
+  const formIsValid =
+    formState.validity.share &&
+    formState.validity.quantity &&
+    formState.validity.price;
 
   return (
     <Grid container className={classes.padding}>
       <Grid item xs={12} className={classes.padding}>
         <FormControl className={classes.formControl}>
           <InputLabel id="share">Share</InputLabel>
-          <Select id="share" value={share} onChange={handleShareChange}>
+          <Select
+            {...input.select({
+              name: "share",
+              onChange: handleShareChange
+            })}
+            value={formState.values.share}
+          >
             {holdings.map(({ stock }) => (
               <MenuItem key={stock} value={stock}>
                 {stock}
@@ -111,18 +110,14 @@ const SellShares = ({
       <Grid item xs={12} className={classes.padding}>
         <FormControl className={classes.formControl}>
           <TextField
-            id="quantity"
-            type="number"
-            label="Quantity"
+            {...input.text({
+              name: "quantity",
+              validate: (value, values, event) =>
+                validateQuantity(value, values)
+            })}
             required
-            value={quantity !== 0 ? quantity.toString() : ""}
-            error={
-              share !== "" &&
-              price > 0 &&
-              (quantityError !== "" || quantity <= 0)
-            }
-            helperText={quantityError}
-            onChange={handleQuantityChange}
+            error={formState.validity.quantity === false}
+            helperText={formState.errors.quantity}
           />
         </FormControl>
       </Grid>
@@ -130,21 +125,14 @@ const SellShares = ({
         <FormControl className={classes.margin} required>
           <InputLabel htmlFor="price">Current market price</InputLabel>
           <Input
-            id="price"
-            value={
-              price > 0
-                ? new Intl.NumberFormat("en-AU", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  }).format(price)
-                : ""
-            }
-            onChange={() => {}}
+            {...input.text({
+              name: "price"
+            })}
+            disabled
             startAdornment={<InputAdornment position="start">$</InputAdornment>}
             endAdornment={
               <InputAdornment position="end">
-                {share && price === 0 && <CircularProgress />}
+                {fetchingSharePrice && <CircularProgress />}
               </InputAdornment>
             }
           />
@@ -155,7 +143,7 @@ const SellShares = ({
         <Button
           variant="contained"
           color="primary"
-          disabled={!isValid}
+          disabled={!formIsValid}
           onClick={handleSubmit}
         >
           Sell
