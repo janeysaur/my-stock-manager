@@ -1,4 +1,5 @@
 import React from "react";
+import { useFormState } from "react-use-form-state";
 import {
   Paper,
   Tabs,
@@ -42,48 +43,9 @@ const ManageCash = ({
   addTransaction: typeof addCashTransaction;
 }) => {
   const [action, setAction] = React.useState(TransactionType.DEPOSIT);
-  const [amountError, setAmountError] = React.useState("");
-  const [amount, setAmount] = React.useState(0);
-  const [amountString, setAmountString] = React.useState("");
-  const [isValid, setIsValid] = React.useState(false);
-
   const handleTabChange = (event, newIndex) => {
     setAction(tabs[newIndex]);
-    setAmount(0);
-    setAmountString("");
   };
-
-  const handleAmountChange = event => {
-    const newValue: string = event.target.value;
-    const newAmount: number = parseFloat(newValue);
-    setAmountString(newValue);
-    setAmount(newAmount);
-  };
-
-  React.useEffect(() => {
-    setAmountError("");
-    setIsValid(true);
-
-    if (action === TransactionType.WITHDRAW && amount > balance) {
-      setAmountError("Insufficient funds");
-      setIsValid(false);
-    } else {
-      setIsValid(amount > 0);
-    }
-  }, [amount, action]);
-
-  const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
-    const transaction: CashTransaction = {
-      date: new Date().toISOString(),
-      amount: (action === TransactionType.DEPOSIT ? 1 : -1) * amount
-    };
-
-    addTransaction(transaction);
-    setAmountString("");
-    setAmount(0);
-  };
-
-  const classes = useStyles();
 
   return (
     <Paper>
@@ -91,35 +53,124 @@ const ManageCash = ({
         <Tab label="Deposit" />
         <Tab label="Withdraw" />
       </Tabs>
-      <Grid container spacing={1} className={classes.padding}>
-        <Grid item xs={12}>
-          <FormControl className={classes.margin} required>
-            <InputLabel htmlFor="amount">Amount</InputLabel>
-            <Input
-              id="amount"
-              value={amountString}
-              type="number"
-              onChange={handleAmountChange}
-              error={amountError !== "" || amount < 0}
-              startAdornment={
-                <InputAdornment position="start">$</InputAdornment>
-              }
-            />
-          </FormControl>
-          <FormHelperText error>{amountError}</FormHelperText>
-        </Grid>
-        <Grid container justify="flex-end" className={classes.padding}>
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={!isValid}
-            onClick={handleSubmit}
-          >
-            {action}
-          </Button>
-        </Grid>
-      </Grid>
+      {action === TransactionType.DEPOSIT && (
+        <DepositCash addTransaction={addTransaction} />
+      )}
+      {action === TransactionType.WITHDRAW && (
+        <WithdrawCash balance={balance} addTransaction={addTransaction} />
+      )}
     </Paper>
+  );
+};
+
+const DepositCash = ({
+  addTransaction
+}: {
+  addTransaction: typeof addCashTransaction;
+}) => {
+  const classes = useStyles();
+  const [formState, input] = useFormState();
+
+  const validateAmount = value => {
+    const floatValue = parseFloat(value);
+    return isNaN(floatValue) === false;
+  };
+
+  const handleSubmit = e => {
+    const transaction: CashTransaction = {
+      date: new Date().toISOString(),
+      amount: parseFloat(formState.values.amount)
+    };
+
+    addTransaction(transaction);
+    formState.reset();
+  };
+
+  return (
+    <Grid container spacing={1} className={classes.padding}>
+      <Grid item xs={12}>
+        <FormControl className={classes.margin} required>
+          <InputLabel htmlFor="amount">Amount</InputLabel>
+          <Input
+            {...input.number({
+              name: "amount",
+              validate: (value, values, event) => validateAmount(value)
+            })}
+            error={formState.validity.amount === false}
+            startAdornment={<InputAdornment position="start">$</InputAdornment>}
+          />
+        </FormControl>
+        <FormHelperText error>{formState.errors.amount || ""}</FormHelperText>
+      </Grid>
+      <Grid container justify="flex-end" className={classes.padding}>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={formState.validity.amount === false}
+          onClick={handleSubmit}
+        >
+          Deposit
+        </Button>
+      </Grid>
+    </Grid>
+  );
+};
+
+const WithdrawCash = ({
+  balance,
+  addTransaction
+}: {
+  balance: number;
+  addTransaction: typeof addCashTransaction;
+}) => {
+  const classes = useStyles();
+  const [formState, input] = useFormState();
+
+  const validateAmount = value => {
+    const floatValue = parseFloat(value);
+    if (floatValue > balance) {
+      return "Insufficient funds";
+    }
+    return isNaN(floatValue) === false;
+  };
+
+  const handleSubmit = e => {
+    const transaction: CashTransaction = {
+      date: new Date().toISOString(),
+      amount: -1 * parseFloat(formState.values.amount)
+    };
+
+    addTransaction(transaction);
+    formState.reset();
+  };
+
+  return (
+    <Grid container spacing={1} className={classes.padding}>
+      <Grid item xs={12}>
+        <FormControl className={classes.margin} required>
+          <InputLabel htmlFor="amount">Amount</InputLabel>
+          <Input
+            {...input.number({
+              name: "amount",
+              validate: (value, values, event) => validateAmount(value)
+            })}
+            error={formState.validity.amount === false}
+            startAdornment={<InputAdornment position="start">$</InputAdornment>}
+          />
+        </FormControl>
+        <FormHelperText error>{formState.errors.amount || ""}</FormHelperText>
+      </Grid>
+      <Grid container justify="flex-end" className={classes.padding}>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={formState.validity.amount === false}
+          onClick={handleSubmit}
+        >
+          Withdraw
+        </Button>
+      </Grid>
+    </Grid>
   );
 };
 
