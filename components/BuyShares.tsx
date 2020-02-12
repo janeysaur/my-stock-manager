@@ -1,4 +1,5 @@
 import React from "react";
+import { useFormState } from "react-use-form-state";
 import {
   makeStyles,
   FormControl,
@@ -41,87 +42,71 @@ const BuyShares = ({
 }) => {
   const classes = useStyles();
 
-  const [share, setShare] = React.useState("");
-  const [quantity, setQuantity] = React.useState(0);
-  const [price, setPrice] = React.useState(0);
-  const [errorMessage, setErrorMessage] = React.useState("");
-  const [isValid, setIsValid] = React.useState(false);
+  const [formState, input] = useFormState();
 
+  const [fetchingSharePrice, setFetchingSharePrice] = React.useState();
   const fetchCurrentSharePrice = async symbol => {
+    setFetchingSharePrice(true);
+    formState.clearField("price");
     const currentPrice = await fetchCurrentSharePriceDebounced(symbol);
     if (currentPrice) {
-      setPrice(currentPrice);
-    } else {
-      setPrice(0);
+      formState.setField("price", currentPrice);
     }
-  };
-
-  const resetForm = () => {
-    setShare("");
-    setQuantity(0);
-    setPrice(0);
+    setFetchingSharePrice(false);
   };
 
   const handleShareChange = event => {
     const newValue = event.target.value;
-    setShare(newValue);
     fetchCurrentSharePrice(newValue);
-    setQuantity(0);
-    setPrice(0);
   };
 
-  const handleQuantityChange = event => {
-    const newValue = parseInt(event.target.value);
-    setQuantity(newValue);
-    if (quantity < 0) {
-      setIsValid(false);
-    }
+  const validateQuantity = value => {
+    const intValue = parseInt(value);
+    return isNaN(intValue) === false;
   };
-
-  React.useEffect(() => {
-    setIsValid(true);
-    setErrorMessage("");
-
-    if (price <= 0) {
-      setIsValid(false);
-    } else if (quantity <= 0) {
-      setIsValid(false);
-    } else if (price * quantity > balance) {
-      setIsValid(false);
-      setErrorMessage("Insufficient funds");
-    }
-  }, [share, price, quantity, balance]);
 
   const handleSubmit = () => {
-    if (isValid) {
-      buyShares(share, quantity, price);
-      resetForm();
-    }
+    const { share, quantity, price } = formState.values;
+    buyShares(share, parseInt(quantity), parseFloat(price));
+    formState.reset();
   };
+
+  let hasSufficientFunds = true;
+  if (formState.values.quantity && formState.values.price) {
+    const floatPrice = parseFloat(formState.values.price);
+    const intQuantity = parseInt(formState.values.quantity);
+    hasSufficientFunds = floatPrice * intQuantity < balance;
+  }
+
+  const formIsValid =
+    hasSufficientFunds &&
+    formState.validity.share &&
+    formState.validity.quantity &&
+    formState.validity.price;
 
   return (
     <Grid container className={classes.padding}>
       <Grid item xs={12} className={classes.padding}>
         <FormControl className={classes.formControl}>
           <TextField
-            id="share"
-            type="text"
+            {...input.text({
+              name: "share",
+              onChange: handleShareChange
+            })}
             label="Share"
             required
-            value={share}
-            onChange={handleShareChange}
           />
         </FormControl>
       </Grid>
       <Grid item xs={12} className={classes.padding}>
         <FormControl className={classes.formControl}>
           <TextField
-            id="quantity"
-            type="number"
+            {...input.number({
+              name: "quantity",
+              validate: (value, values, event) => validateQuantity(value)
+            })}
             label="Quantity"
             required
-            value={quantity !== 0 ? quantity.toString() : ""}
-            onChange={handleQuantityChange}
           />
         </FormControl>
       </Grid>
@@ -129,33 +114,28 @@ const BuyShares = ({
         <FormControl className={classes.margin} required>
           <InputLabel htmlFor="price">Current market price</InputLabel>
           <Input
-            id="price"
-            value={
-              price > 0
-                ? new Intl.NumberFormat("en-AU", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  }).format(price)
-                : ""
-            }
-            onChange={() => {}}
+            {...input.text({
+              name: "price"
+            })}
+            disabled
             startAdornment={<InputAdornment position="start">$</InputAdornment>}
             endAdornment={
               <InputAdornment position="end">
-                {share && price === 0 && <CircularProgress />}
+                {fetchingSharePrice && <CircularProgress />}
               </InputAdornment>
             }
           />
         </FormControl>
-        <FormHelperText error>{errorMessage}</FormHelperText>
+        <FormHelperText error>
+          {!hasSufficientFunds ? "Insufficient funds" : ""}
+        </FormHelperText>
       </Grid>
 
       <Grid container justify="flex-end" className={classes.padding}>
         <Button
           variant="contained"
           color="primary"
-          disabled={!isValid}
+          disabled={!formIsValid}
           onClick={handleSubmit}
         >
           Buy
